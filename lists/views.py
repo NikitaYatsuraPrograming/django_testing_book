@@ -10,4 +10,4 @@ def home_page(request):
     :return:
     """
 
-    return HttpResponse('<html><title>To-Do lists</title></html>')
+    return render(request, 'lists/home_page.html')
