@@ -5,6 +5,7 @@ from django.shortcuts import render
 def home_page(request):
     """
     Доашняя страница
+
     :param request:
     :return:
     """
