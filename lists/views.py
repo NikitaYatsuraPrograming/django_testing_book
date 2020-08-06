@@ -10,4 +10,7 @@ def home_page(request):
     :return:
     """
 
-    return render(request, 'lists/home_page.html')
+    return render(request, 'lists/home_page.html',
+                  {
+                      'new_item_text': request.POST.get('item_text'),
+                  })
