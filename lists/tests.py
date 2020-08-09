@@ -18,14 +18,49 @@ class HomePageTest(TestCase):
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'lists/home_page.html')
 
+    def test_display_all_list_items(self):
+        """
+        Тест: отображаются все элементы списка
+        :return:
+        """
+
+        Item.objects.create(text='item 1')
+        Item.objects.create(text='item 2')
+
+        response = self.client.get('/')
+
+        self.assertIn('item 1', response.content.decode())
+        self.assertIn('item 2', response.content.decode())
+
     def test_can_save_a_POST_request(self):
         """
         Тест: можно сохранить post-запрос
         :return:
         """
+        self.client.post('/', data={'item_text': 'A new list item'})
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, 'A new list item')
+
+    def test_redirects_after_POST(self):
+        """
+        Тест: переадресует после post-запроса
+        :return:
+        """
+
         response = self.client.post('/', data={'item_text': 'A new list item'})
-        self.assertIn('A new list item', response.content.decode())
-        self.assertTemplateUsed(response, 'lists/home_page.html')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['location'], '/')
+
+    def test_only_saves_items_when_necessary(self):
+        """
+        Тест: сохраняет элементы, только когда нужно
+        :return:
+        """
+
+        self.client.get('/')
+        self.assertEqual(Item.objects.count(), 0)
 
 
 class ItemModelTest(TestCase):
@@ -55,3 +90,4 @@ class ItemModelTest(TestCase):
 
         self.assertEqual(first_saved_item.text, 'The first (ever) list item')
         self.assertEqual(second_saved_item.text, 'Item the second')
+
