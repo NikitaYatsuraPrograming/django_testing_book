@@ -1,14 +1,12 @@
+from django.test import LiveServerTestCase
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 import time
-import unittest
 
 
-import unittest
-
-
-class NewVisitorTest(unittest.TestCase):
+class NewVisitorTest(LiveServerTestCase):
     """
     Тест нового посетителя
     """
@@ -47,7 +45,7 @@ class NewVisitorTest(unittest.TestCase):
         :return:
         """
 
-        self.browser.get('http://localhost:8000')
+        self.browser.get(self.live_server_url)
 
         self.assertIn('To-Do lists', self.browser.title)
         header_test = self.browser.find_element_by_tag_name('h1').text
@@ -74,7 +72,3 @@ class NewVisitorTest(unittest.TestCase):
         self.check_for_row_in_list_table('2: Сделать мушку из павлиньих перьев')
 
         self.fail('Закончить тест')
-
-
-if __name__ == '__main__':
-    unittest.main(warnings='ignore')
