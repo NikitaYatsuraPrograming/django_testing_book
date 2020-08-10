@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import resolve
 
 from lists.views import home_page
-from lists.models import Item
+from lists.models import Item, List
 from urllib.parse import quote
 
 
@@ -20,7 +20,7 @@ class HomePageTest(TestCase):
         self.assertTemplateUsed(response, 'lists/home_page.html')
 
 
-class ItemModelTest(TestCase):
+class ListAndItemModelTest(TestCase):
     """
     Тест: модели элемента списка
     """
@@ -31,13 +31,21 @@ class ItemModelTest(TestCase):
         :return:
         """
 
+        list_ = List()
+        list_.save()
+
         first_item = Item()
         first_item.text = 'The first (ever) list item'
+        first_item.list = list_
         first_item.save()
 
         second_item = Item()
         second_item.text = 'Item the second'
+        second_item.list = list_
         second_item.save()
+
+        saved_list = List.objects.first()
+        self.assertEqual(saved_list, list_)
 
         saved_items = Item.objects.all()
         self.assertEqual(saved_items.count(), 2)
@@ -46,13 +54,32 @@ class ItemModelTest(TestCase):
         second_saved_item = saved_items[1]
 
         self.assertEqual(first_saved_item.text, 'The first (ever) list item')
+        self.assertEqual(first_saved_item.list, list_)
+
         self.assertEqual(second_saved_item.text, 'Item the second')
+        self.assertEqual(second_saved_item.list, list_)
 
 
 class ListViewTest(TestCase):
     """
     Тест представления списка
     """
+
+    def test_display_all_items(self):
+        """
+        Тест: отображаются все элементы списка
+        :return:
+        """
+
+        list_ = List.objects.create()
+
+        Item.objects.create(text='item 1', list=list_)
+        Item.objects.create(text='item 2', list=list_)
+
+        response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
+
+        self.assertContains(response, 'item 1')
+        self.assertContains(response, 'item 2')
 
     def test_user_list_template(self):
         """
@@ -62,20 +89,6 @@ class ListViewTest(TestCase):
 
         response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
         self.assertTemplateUsed(response, 'lists/list.html')
-
-    def test_display_all_items(self):
-        """
-        Тест: отображаются все элементы списка
-        :return:
-        """
-
-        Item.objects.create(text='item 1')
-        Item.objects.create(text='item 2')
-
-        response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
-
-        self.assertContains(response, 'item 1')
-        self.assertContains(response, 'item 2')
 
 
 class NewListTest(TestCase):
