@@ -65,30 +65,51 @@ class ListViewTest(TestCase):
     Тест представления списка
     """
 
-    def test_display_all_items(self):
-        """
-        Тест: отображаются все элементы списка
-        :return:
-        """
-
-        list_ = List.objects.create()
-
-        Item.objects.create(text='item 1', list=list_)
-        Item.objects.create(text='item 2', list=list_)
-
-        response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
-
-        self.assertContains(response, 'item 1')
-        self.assertContains(response, 'item 2')
-
-    def test_user_list_template(self):
+    def test_uses_list_template(self):
         """
         Тест использьзуется шаблон списка
         :return:
         """
+        list_ = List.objects.create()
 
-        response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
+        response = self.client.get(f'/lists/{list_.pk}/')
         self.assertTemplateUsed(response, 'lists/list.html')
+
+    def test_displays_only_items_for_that_list(self):
+        """
+        Тест: отображаются элементы только для этого списка
+        :return:
+        """
+
+        correct_list = List.objects.create()
+
+        Item.objects.create(text='item 1', list=correct_list)
+        Item.objects.create(text='item 2', list=correct_list)
+
+        other_list = List.objects.create()
+
+        Item.objects.create(text='item 1(new list)', list=other_list)
+        Item.objects.create(text='item 2(new list)', list=other_list)
+
+        response = self.client.get(f'/lists/{correct_list.pk}/')
+
+        self.assertContains(response, 'item 1')
+        self.assertContains(response, 'item 2')
+
+        self.assertNotContains(response, 'item 1(new list)')
+        self.assertNotContains(response, 'item 2(new list)')
+
+    def test_passes_correct_list_to_tamplate(self):
+        """
+        Тест: передается правильный шаблон
+        :return:
+        """
+
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
+
+        response = self.client.get(f'/lists/{correct_list.pk}/')
+        self.assertEqual(response.context['list'], correct_list)
 
 
 class NewListTest(TestCase):
@@ -96,26 +117,38 @@ class NewListTest(TestCase):
     Тест нового списка
     """
 
-    def test_can_save_a_POST_request(self):
+    def test_can_save_a_POST_request_to_an_existing_list(self):
         """
-        Тест: можно сохранить post-запрос
+        Тест: можно сохранить post-запрос в существующий список
         :return:
         """
 
-        self.client.post('/lists/new', data={'item_text': 'A new list item'})
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
+
+        self.client.post(
+            f'/lists/{correct_list.pk}/add_item',
+            data={'item_text': 'A new item for an existing list'}
+        )
         self.assertEqual(Item.objects.count(), 1)
 
         new_item = Item.objects.first()
-        self.assertEqual(new_item.text, 'A new list item')
+        self.assertEqual(new_item.text, 'A new item for an existing list')
+        self.assertEqual(new_item.list, correct_list)
 
-    def test_redirects_after_POST(self):
+    def test_redirects_to_list_view(self):
         """
-        Тест: переадресация после post-запроса
+        Тест: переадресация в представление списка
         :return:
         """
 
-        response = self.client.post('/lists/new', data={'item_text': 'A new list item'})
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
 
-        self.assertEqual(response.status_code, 302)
+        response = self.client.post(
+            f'/lists/{correct_list.pk}/add_item',
+            data={'item_text': 'A new item for an existing list'}
+        )
+
         # quote кодирует строку в URL(пример: %b%BJ%J%)
-        self.assertRedirects(response, quote('/lists/единственный-в-своем-роде-список-в-мире/'))
+        self.assertRedirects(response, quote(f'/lists/{correct_list.pk}/'))

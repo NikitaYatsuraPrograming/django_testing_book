@@ -1,9 +1,10 @@
 from django.urls import path
 
-from lists.views import home_page, view_list, new_list
+from lists.views import home_page, view_list, new_list, add_item
 
 urlpatterns = [
     path('', home_page, name='home'),
     path('lists/new', new_list, name='new_list'),
-    path('lists/единственный-в-своем-роде-список-в-мире/', view_list, name='view_list'),
+    path('lists/<int:pk>/', view_list, name='view_list'),
+    path('lists/<int:pk>/add_item', add_item, name='add_item'),
 ]
