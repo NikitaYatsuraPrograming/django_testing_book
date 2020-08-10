@@ -3,6 +3,7 @@ from django.urls import resolve
 
 from lists.views import home_page
 from lists.models import Item
+from urllib.parse import quote
 
 
 class HomePageTest(TestCase):
@@ -17,20 +18,6 @@ class HomePageTest(TestCase):
         """
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'lists/home_page.html')
-
-    def test_display_all_list_items(self):
-        """
-        Тест: отображаются все элементы списка
-        :return:
-        """
-
-        Item.objects.create(text='item 1')
-        Item.objects.create(text='item 2')
-
-        response = self.client.get('/')
-
-        self.assertIn('item 1', response.content.decode())
-        self.assertIn('item 2', response.content.decode())
 
     def test_can_save_a_POST_request(self):
         """
@@ -51,7 +38,7 @@ class HomePageTest(TestCase):
         response = self.client.post('/', data={'item_text': 'A new list item'})
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['location'], '/')
+        self.assertEqual(response['location'], quote('/lists/единственный-в-своем-роде-список-в-мире/'))
 
     def test_only_saves_items_when_necessary(self):
         """
@@ -91,3 +78,31 @@ class ItemModelTest(TestCase):
         self.assertEqual(first_saved_item.text, 'The first (ever) list item')
         self.assertEqual(second_saved_item.text, 'Item the second')
 
+
+class ListViewTest(TestCase):
+    """
+    Тест представления списка
+    """
+
+    def test_user_list_template(self):
+        """
+        Тест использьзуется шаблон списка
+        :return:
+        """
+
+        response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
+        self.assertTemplateUsed(response, 'lists/list.html')
+
+    def test_display_all_items(self):
+        """
+        Тест: отображаются все элементы списка
+        :return:
+        """
+
+        Item.objects.create(text='item 1')
+        Item.objects.create(text='item 2')
+
+        response = self.client.get('/lists/единственный-в-своем-роде-список-в-мире/')
+
+        self.assertContains(response, 'item 1')
+        self.assertContains(response, 'item 2')
