@@ -132,8 +132,8 @@ class NewListTest(TestCase):
 
 class NewItemTest(TestCase):
     """
-        Тест нового списка
-        """
+    Тест нового списка
+    """
     def test_can_save_a_POST_request_to_an_existing_list(self):
         """
         Тест: можно сохранить post-запрос в существующий список
