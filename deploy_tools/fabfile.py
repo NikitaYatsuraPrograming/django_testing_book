@@ -13,7 +13,7 @@ def _create_directory_structure_if_necessary(site_folder):
     """
 
     for subfolder in ('database', 'static', 'virtualenv', 'source'):
-        run(f'mkdir -p {site_folder}/{site_folder}')
+        run(f'mkdir -p {site_folder}/{subfolder}')
 
 
 def _get_latest_source(source_folder):
@@ -27,9 +27,6 @@ def _get_latest_source(source_folder):
         run(f'cd {source_folder} && git fetch')
     else:
         run(f'git clone {REPO_URL} {source_folder}')
-
-    current_commit = local("git log -n 1 --format=%H", capture=True)
-    run(f'cd {source_folder} && git reset --hard {current_commit}')
 
 
 def _update_settings(source_folder, site_name):
@@ -87,6 +84,8 @@ def deploy():
     :return:
     """
 
+    run('apt-get install python3 git-all python3-pip python3-venv')
+
     site_folder = f'/root/sites/{env.host}'
     source_folder = site_folder + '/source'
     _create_directory_structure_if_necessary(site_folder)
@@ -94,4 +93,4 @@ def deploy():
     _update_settings(source_folder, env.host)
     _update_virtualenv(source_folder)
     _update_static_files(source_folder)
-    _update_database(source_folder)
+    # _update_database(source_folder)
